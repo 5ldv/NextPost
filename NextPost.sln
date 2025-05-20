@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35913.81 d17.13
+VisualStudioVersion = 17.13.35913.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NextPost.Api", "NextPost.Api\NextPost.Api.csproj", "{4C584AEA-4AB4-4B00-BCF8-41802197CA5A}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NextPost.Core", "NextPost.Core\NextPost.Core.csproj", "{46C428BC-8C3D-4230-B3A8-AD06A9E16B05}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NextPost.Infrastructure", "NextPost.Infrastructure\NextPost.Infrastructure.csproj", "{2258B83B-6862-4C85-8568-17C67CFEF964}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NextPost.Shared", "NextPost.Shared\NextPost.Shared.csproj", "{CA27FB3C-6569-41EE-87EF-E88B7D154ADF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{2258B83B-6862-4C85-8568-17C67CFEF964}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2258B83B-6862-4C85-8568-17C67CFEF964}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2258B83B-6862-4C85-8568-17C67CFEF964}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA27FB3C-6569-41EE-87EF-E88B7D154ADF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA27FB3C-6569-41EE-87EF-E88B7D154ADF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA27FB3C-6569-41EE-87EF-E88B7D154ADF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA27FB3C-6569-41EE-87EF-E88B7D154ADF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
