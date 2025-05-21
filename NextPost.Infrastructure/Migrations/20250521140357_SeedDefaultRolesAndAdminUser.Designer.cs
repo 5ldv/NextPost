@@ -12,8 +12,8 @@ using NextPost.Infrastructure;
 namespace NextPost.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250519093326_SeedInitialUsersAndRoles")]
-    partial class SeedInitialUsersAndRoles
+    [Migration("20250521140357_SeedDefaultRolesAndAdminUser")]
+    partial class SeedDefaultRolesAndAdminUser
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -128,6 +128,57 @@ namespace NextPost.Infrastructure.Migrations
                     b.ToTable("UserTokens", "security");
                 });
 
+            modelBuilder.Entity("NextPost.Core.Models.Author", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Authors", (string)null);
+                });
+
             modelBuilder.Entity("NextPost.Core.Models.Identity.AppRole", b =>
                 {
                     b.Property<int>("Id")
@@ -169,10 +220,6 @@ namespace NextPost.Infrastructure.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Bio")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -184,16 +231,6 @@ namespace NextPost.Infrastructure.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -293,6 +330,17 @@ namespace NextPost.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("NextPost.Core.Models.Author", b =>
+                {
+                    b.HasOne("NextPost.Core.Models.Identity.AppUser", "User")
+                        .WithOne("Author")
+                        .HasForeignKey("NextPost.Core.Models.Author", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("NextPost.Core.Models.Identity.AppUser", b =>
                 {
                     b.OwnsMany("NextPost.Core.Models.RefreshToken", "RefreshTokens", b1 =>
@@ -321,13 +369,18 @@ namespace NextPost.Infrastructure.Migrations
 
                             b1.HasKey("AppUserId", "Id");
 
-                            b1.ToTable("RefreshToken", "security");
+                            b1.ToTable("RefreshTokens", "security");
 
                             b1.WithOwner()
                                 .HasForeignKey("AppUserId");
                         });
 
                     b.Navigation("RefreshTokens");
+                });
+
+            modelBuilder.Entity("NextPost.Core.Models.Identity.AppUser", b =>
+                {
+                    b.Navigation("Author");
                 });
 #pragma warning restore 612, 618
         }

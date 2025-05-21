@@ -5,7 +5,7 @@
 namespace NextPost.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class SeedInitialUsersAndRoles : Migration
+    public partial class SeedDefaultRolesAndAdminUser : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -22,8 +22,8 @@ namespace NextPost.Infrastructure.Migrations
                     Guid.NewGuid().ToString()
                 },
                 {
-                    "User",
-                    "USER",
+                    "Author",
+                    "AUTHOR",
                     Guid.NewGuid().ToString()
                 }
                 });
@@ -32,8 +32,6 @@ namespace NextPost.Infrastructure.Migrations
                 schema: "security",
                 table: "Users",
                 columns: new[] {
-                    "FirstName",
-                    "LastName",
                     "UserName",
                     "NormalizedUserName",
                     "Email",
@@ -49,9 +47,7 @@ namespace NextPost.Infrastructure.Migrations
                 },
                 values: new object[,]
                 {
-                    {                      
-                        "Admin",
-                        "Admin",
+                    {
                         "Admin",
                         "ADMIN",
                         "admin@NextPost.local",
@@ -84,7 +80,7 @@ namespace NextPost.Infrastructure.Migrations
         {
             migrationBuilder.Sql("DELETE FROM [security].UserRoles WHERE UserId = (SELECT Id FROM [security].Users WHERE UserName = 'Admin')");
             migrationBuilder.Sql("DELETE FROM [security].Users WHERE UserName = 'Admin'");
-            migrationBuilder.Sql("DELETE FROM [security].Roles WHERE Name IN ('Admin', 'User')");
+            migrationBuilder.Sql("DELETE FROM [security].Roles WHERE Name IN ('Admin', 'Author')");
         }
     }
 }

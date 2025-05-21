@@ -9,6 +9,7 @@ using NextPost.Api.Configurations;
 using NextPost.Api.Middlewares;
 using NextPost.Application.Interfaces;
 using NextPost.Application.Services;
+using NextPost.Core.Interfaces;
 using NextPost.Core.Models.Identity;
 using NextPost.Infrastructure;
 using Serilog;
@@ -93,10 +94,12 @@ namespace NextPost.Api
 
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-            builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IAuthorService, AuthorService>();
 
-            
+            builder.Services.AddHttpContextAccessor();
 
             var app = builder.Build();
 

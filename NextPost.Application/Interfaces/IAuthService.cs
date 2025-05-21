@@ -12,6 +12,6 @@ namespace NextPost.Application.Interfaces
         Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto);
         Task<AuthResponseDto> LoginAsync(LoginDto loginDto);
         Task<AuthResponseDto> RefreshUserTokenAsync(string refreshToken);
-        Task<bool> RevokeUserToken(string refreshToken);
+        Task<bool> RevokeUserTokenAsync(string refreshToken);
     }
 }

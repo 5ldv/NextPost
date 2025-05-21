@@ -19,7 +19,9 @@ using System.Threading.Tasks;
 
 namespace NextPost.Application.Services
 {
-    public class JwtTokenService(IOptions<JwtSettings> jwtSettings, UserManager<AppUser> userManager) : IJwtTokenService
+    public class JwtTokenService(
+        IOptions<JwtSettings> jwtSettings,
+        UserManager<AppUser> userManager) : IJwtTokenService
     {
         private readonly JwtSettings _jwtSettings = jwtSettings.Value;
         private readonly UserManager<AppUser> _userManager = userManager;
@@ -29,7 +31,7 @@ namespace NextPost.Application.Services
             if(user is null)
                 throw new ArgumentNullException(nameof(user), "User cannot be null");
 
-            var claims = await ClaimsHelper.GetClaimsAsync(user, _userManager);
+            var claims = await ClaimsHelper.GetClaimsListAsync(user, _userManager);
 
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
             var signingCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);

@@ -9,5 +9,6 @@ namespace NextPost.Core.Models.Identity
 {
     public class AppRole : IdentityRole<int>
     {
+
     }
 }

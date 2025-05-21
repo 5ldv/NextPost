@@ -14,8 +14,9 @@ namespace NextPost.Api.Controllers.v1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/auth")]
-    [Authorize]
-    public class AuthController(IAuthService authService, ILogger<AuthController> logger) : ControllerBase
+    public class AuthController(
+        IAuthService authService,
+        ILogger<AuthController> logger) : ControllerBase
     {
         private readonly IAuthService _authService = authService;
         private readonly ILogger<AuthController> _logger = logger;
@@ -28,12 +29,11 @@ namespace NextPost.Api.Controllers.v1
         /// <response code="500">Server error during registration.</response>
         [HttpPost]
         [Route("register")]
-        [AllowAnonymous]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Register(RegisterDto registerDto)
-        {
+        { 
             _logger.LogInformation("Register endpoint called for user: {Username}", registerDto.Username);
 
             var authResponse = await _authService.RegisterAsync(registerDto);
@@ -56,7 +56,6 @@ namespace NextPost.Api.Controllers.v1
         /// <response code="500">Server error during login.</response>
         [HttpPost]
         [Route("login")]
-        [AllowAnonymous]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
@@ -84,7 +83,6 @@ namespace NextPost.Api.Controllers.v1
         /// <response code="401">Invalid or expired refresh token.</response>
         /// <response code="500">Server error during token refresh.</response>
         [HttpPost]
-        [AllowAnonymous]
         [Route("refresh-token")]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
@@ -124,13 +122,17 @@ namespace NextPost.Api.Controllers.v1
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+        [Authorize]
         public async Task<IActionResult> RevokeToken()
         {
             _logger.LogInformation("RevokeToken endpoint called");
 
-            var refreshToken = Request.Cookies["RefreshToken"];
+            var refreshToken = CookieHelper.GetRefreshToken(Request);
 
-            var isRevoked = await _authService.RevokeUserToken(refreshToken);
+            if(string.IsNullOrEmpty(refreshToken))
+                throw new ArgumentException(nameof(refreshToken), "Refresh token is missing.");
+
+            var isRevoked = await _authService.RevokeUserTokenAsync(refreshToken);
 
             if(isRevoked)
             {

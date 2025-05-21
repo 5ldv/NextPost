@@ -16,12 +16,6 @@ namespace NextPost.Infrastructure.Data.config
             builder.Property(p => p.Id)
                 .UseIdentityColumn();
 
-            builder.Property(p => p.FirstName)
-                 .HasMaxLength(64);
-
-            builder.Property(p => p.LastName)
-               .HasMaxLength(64);
-
             builder.Property(p => p.Email)
             .HasMaxLength(128)
             .IsRequired();
@@ -30,12 +24,8 @@ namespace NextPost.Infrastructure.Data.config
             .HasMaxLength(128)
             .IsRequired();
 
-            builder.Property(p => p.Bio)
-               .HasMaxLength(256);
-
             builder.OwnsMany(p => p.RefreshTokens)
                 .ToTable("RefreshTokens");
-
         }
     }
 }

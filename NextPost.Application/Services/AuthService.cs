@@ -5,12 +5,16 @@ using Microsoft.EntityFrameworkCore;
 using NextPost.Application.Constants;
 using NextPost.Application.Dtos;
 using NextPost.Application.Interfaces;
+using NextPost.Core.Interfaces;
+using NextPost.Core.Models;
 using NextPost.Core.Models.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace NextPost.Application.Services
 {
@@ -18,13 +22,15 @@ namespace NextPost.Application.Services
         IMapper mapper, IJwtTokenService jwtTokenService,
         UserManager<AppUser> userManager,
         IValidator<RegisterDto> registerDtoValidator,
-        IValidator<LoginDto> loginDtoValidator) : IAuthService
+        IValidator<LoginDto> loginDtoValidator,
+        IUnitOfWork unitOfWork) : IAuthService
     {
         private readonly IMapper _mapper = mapper;
         private readonly IJwtTokenService _jwtTokenService = jwtTokenService;
         private readonly UserManager<AppUser> _userManager = userManager;
         private readonly IValidator<RegisterDto> _registerDtoValidator = registerDtoValidator;
         private readonly IValidator<LoginDto> _loginDtoValidator = loginDtoValidator;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
         {
@@ -68,19 +74,32 @@ namespace NextPost.Application.Services
             };
 
         }
-        public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
+        public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
         {
-            var validationResult = await _registerDtoValidator.ValidateAsync(registerDto);
-            
+            var validationResult = await _registerDtoValidator.ValidateAsync(dto);
+
             if(!validationResult.IsValid)
                 throw new ValidationException(validationResult.Errors);
 
+            var user = _mapper.Map<AppUser>(dto);
 
-            var user = _mapper.Map<AppUser>(registerDto);
-            var result = await _userManager.CreateAsync(user, registerDto.Password);
+            var result = await _userManager.CreateAsync(user, dto.Password);
 
             if(!result.Succeeded)
-                 throw new ApplicationException(string.Join("; ", result.Errors.Select(e => e.Description)));
+                throw new ApplicationException(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+            var author = new Author
+            {
+                UserId = user.Id,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                User = user
+            };
+
+            var addedAuthor = await _unitOfWork.Authors.AddAsync(author);
+            await _unitOfWork.SaveChangesAsync();
+
+            user.Author = addedAuthor;
 
             var accessToken = await _jwtTokenService.CreateAccessTokenAsync(user);
             var refreshToken = _jwtTokenService.CreateRefreshToken();
@@ -88,7 +107,7 @@ namespace NextPost.Application.Services
             user.RefreshTokens.Add(refreshToken);
             await _userManager.UpdateAsync(user);
 
-            var roleResult = await _userManager.AddToRoleAsync(user, UserRoles.User);
+            var roleResult = await _userManager.AddToRoleAsync(user, UserRoles.Author);
             if(!roleResult.Succeeded)
             {
                 await _userManager.DeleteAsync(user);
@@ -135,7 +154,7 @@ namespace NextPost.Application.Services
                 RefreshTokenExpiration = newRefreshToken.ExpiresOn
             };
         }
-        public async Task<bool> RevokeUserToken(string refreshToken)
+        public async Task<bool> RevokeUserTokenAsync(string refreshToken)
         {
             return await _jwtTokenService.RevokeRefreshTokenAsync(refreshToken);
         }
