@@ -10,4 +10,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.16" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NextPost.Shared\NextPost.Shared.csproj" />
+  </ItemGroup>
+
+
 </Project>

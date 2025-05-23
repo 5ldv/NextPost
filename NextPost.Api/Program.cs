@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using NextPost.Api.Configurations;
+using NextPost.Api.Filters;
 using NextPost.Api.Middlewares;
 using NextPost.Application.Interfaces;
 using NextPost.Application.Services;
@@ -26,7 +27,10 @@ namespace NextPost.Api
             var builder = WebApplication.CreateBuilder(args);
 
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers(options =>
+            {
+                options.Filters.Add<RequestLoggingFilter>();
+            });
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
@@ -98,6 +102,8 @@ namespace NextPost.Api
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IAuthorService, AuthorService>();
+            builder.Services.AddScoped<IPostService, PostService>();
+            builder.Services.AddScoped<ICommentService, CommentService>();
 
             builder.Services.AddHttpContextAccessor();
 
@@ -109,8 +115,6 @@ namespace NextPost.Api
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
-            app.UseSerilogRequestLogging();
 
             app.UseHttpsRedirection();
 

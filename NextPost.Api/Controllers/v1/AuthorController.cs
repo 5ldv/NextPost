@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NextPost.Application.Constants;
 using NextPost.Application.Dtos;
 using NextPost.Application.Interfaces;
 
@@ -26,12 +27,8 @@ namespace NextPost.Api.Controllers.v1
         [ProducesResponseType(typeof(AuthorDto),  StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAuthorByIdAsync(int authorId)
         {
-            if(!ModelState.IsValid)
-                throw new BadHttpRequestException("Invalid request parameters.");
-
             var author = await _authorService.GetAuthorByIdAsync(authorId);
 
             if(author is null)
@@ -50,11 +47,8 @@ namespace NextPost.Api.Controllers.v1
         [ProducesResponseType(typeof(AuthorDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAuthorByUsernameAsync(string username)
         {
-            if(!ModelState.IsValid)
-                throw new BadHttpRequestException("Invalid request parameters.");
 
             var author = await _authorService.GetAuthorByUsernameAsync(username);
 
@@ -63,7 +57,6 @@ namespace NextPost.Api.Controllers.v1
 
             return Ok(author);
         }
-
 
         /// <summary>
         /// Updates an existing author's information.
@@ -77,6 +70,7 @@ namespace NextPost.Api.Controllers.v1
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+        [Authorize(Roles = UserRoles.Author)]
         public async Task<IActionResult> UpdateAuthorAsync(UpdateAuthorDto dto)
         {
             await _authorService.UpdateAuthorAsync(dto);

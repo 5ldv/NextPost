@@ -22,7 +22,5 @@ namespace NextPost.Infrastructure.Repositories
             _dbContext = dbContext;
             _logger = logger;
         }
-
-
     }
 }

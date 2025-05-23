@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NextPost.Core.Interfaces.Repository;
+using NextPost.Infrastructure.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,31 +18,92 @@ namespace NextPost.Infrastructure.Repository
         private readonly AppDbContext _dbContext = dbContext;
         private readonly ILogger<GenericRepository<TEntity>> _logger = logger;
 
-        public async Task<TEntity> AddAsync(TEntity entity)
+        public async Task<TEntity?> GetByIdAsync(int id, bool trackEntity, string[]? includes = null)
         {
-            await _dbContext.AddAsync(entity);
-            _logger.LogInformation("Entity of type {EntityType} added successfully.", typeof(TEntity).Name);
+
+            IQueryable<TEntity> query = _dbContext.Set<TEntity>();
+
+            if(includes is not null)
+                foreach(var include in includes)
+                    query = query.Include(include);
+
+            if(!trackEntity)
+                query = query.AsNoTracking();
+
+            var entity = await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+
+            _logger.LogInformation(entity != null
+                ? "Entity of type {EntityType} with ID {Id} found."
+                : "No entity of type {EntityType} with ID {Id} found.", typeof(TEntity).Name, id);
             return entity;
         }
 
-        public async Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> predicate, bool trackEntity)
+        public async Task<IEnumerable<TEntity>> GetAllAsync(bool trackEntity,
+            Expression<Func<TEntity, object>> orderBy = null!,
+            string orderDirection = OrderBy.Ascending, string[]? includes = null)
         {
 
-            IQueryable<TEntity> query = _dbContext.Set<TEntity>().Where(predicate);
+            IQueryable<TEntity> query = _dbContext.Set<TEntity>();
+
+            if(includes is not null)
+                foreach(var include in includes)
+                    query = query.Include(include);
 
             if(!trackEntity)
                 query.AsNoTracking();
 
+            if(orderBy is not null)
+            {
+                if(orderDirection == OrderBy.Ascending)
+                    query = query.OrderBy(orderBy);
+                else
+                    query = query.OrderByDescending(orderBy);
+            }
+
             var entities = await query.ToListAsync();
 
-            _logger.LogInformation("Found {Count} entities of type {EntityType} matching predicate.",
-                entities.Count, typeof(TEntity).Name);
+            _logger.LogInformation("Retrieved all entities of type {EntityType}. Count: {Count}",
+                typeof(TEntity).Name, entities.Count);
 
-            return query;
+            return entities;
 
         }
 
-        public async Task<TEntity?> FindAsync(Expression<Func<TEntity, bool>> predicate, bool trackEntity, string[]? includes = null)
+        public async Task<IEnumerable<TEntity>> GetAllAsync(bool trackEntity, int pageNumber,
+            int pageSize, Expression<Func<TEntity, object>> orderBy = null!,
+            string orderDirection = OrderBy.Ascending, string[]? includes = null)
+        {
+            IQueryable<TEntity> query = _dbContext.Set<TEntity>();
+
+            if(includes is not null)
+                foreach(var include in includes)
+                    query = query.Include(include);
+
+            if(!trackEntity)
+                query.AsNoTracking();
+
+            if(orderBy is not null)
+            {
+                if(orderDirection == OrderBy.Ascending)
+                    query = query.OrderBy(orderBy);
+                else
+                    query = query.OrderByDescending(orderBy);
+            }
+
+            query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+
+            var entities = await query.ToListAsync();
+
+            _logger.LogInformation("Retrieved entities of type {EntityType}. Count: {Count}, " +
+                "Page: {pageNumber}, Page Size: {pageSize}",
+                typeof(TEntity).Name, entities.Count, pageNumber, pageSize);
+
+            return entities;
+
+        }
+
+        public async Task<TEntity?> FindAsync(Expression<Func<TEntity, bool>> predicate,
+            bool trackEntity, string[]? includes = null)
         {
 
             IQueryable<TEntity> query = _dbContext.Set<TEntity>();
@@ -63,39 +125,73 @@ namespace NextPost.Infrastructure.Repository
 
         }
 
-        public async Task<IEnumerable<TEntity>> GetAllAsync(bool trackEntity)
+        public async Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> predicate,
+            bool trackEntity, Expression<Func<TEntity, object>> orderBy = null!,
+            string orderDirection = OrderBy.Ascending, string[]? includes = null)
         {
 
-            var query = _dbContext.Set<TEntity>();
-            if(!trackEntity)
-                query.AsNoTracking();
-
-            var entities = await query.ToListAsync();
-
-            _logger.LogInformation("Retrieved all entities of type {EntityType}. Count: {Count}",
-                typeof(TEntity).Name, entities.Count);
-
-            return entities;
-
-        }
-
-        public async Task<TEntity?> GetByIdAsync(int id, bool trackEntity, string[]? includes = null)
-        {
-
-            IQueryable<TEntity> query = _dbContext.Set<TEntity>();
+            IQueryable<TEntity> query = _dbContext.Set<TEntity>().Where(predicate);
 
             if(includes is not null)
                 foreach(var include in includes)
                     query = query.Include(include);
 
             if(!trackEntity)
-                query = query.AsNoTracking();
+                query.AsNoTracking();
 
-            var entity = await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+            if(orderBy is not null)
+            {
+                if(orderDirection == OrderBy.Ascending)
+                    query = query.OrderBy(orderBy);
+                else
+                    query = query.OrderByDescending(orderBy);
+            }
 
-            _logger.LogInformation(entity != null
-                ? "Entity of type {EntityType} with ID {Id} found."
-                : "No entity of type {EntityType} with ID {Id} found.", typeof(TEntity).Name, id);
+            var entities = await query.ToListAsync();
+
+            _logger.LogInformation("Found {Count} entities of type {EntityType} matching predicate.",
+                entities.Count, typeof(TEntity).Name);
+
+            return entities;
+
+        }
+
+        public async Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> predicate,
+            bool trackEntity, int pageNumber, int pageSize, Expression<Func<TEntity, object>> orderBy = null!,
+            string orderDirection = OrderBy.Ascending, string[]? includes = null)
+        {
+            IQueryable<TEntity> query = _dbContext.Set<TEntity>().Where(predicate);
+
+            if(includes is not null)
+                foreach(var include in includes)
+                    query = query.Include(include);
+
+            if(!trackEntity)
+                query.AsNoTracking();
+
+            if(orderBy is not null)
+            {
+                if(orderDirection == OrderBy.Ascending)
+                    query = query.OrderBy(orderBy);
+                else
+                    query = query.OrderByDescending(orderBy);
+            }
+
+            query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+
+            var entities = await query.ToListAsync();
+
+            _logger.LogInformation("Found {Count} entities of type {EntityType} matching predicate. " +
+                "Page: {pageNumber}, Page Size: {pageSize}",
+                entities.Count, typeof(TEntity).Name, pageNumber, pageSize);
+
+            return entities;
+        }
+
+        public async Task<TEntity> AddAsync(TEntity entity)
+        {
+            await _dbContext.AddAsync(entity);
+            _logger.LogInformation("Entity of type {EntityType} added successfully.", typeof(TEntity).Name);
             return entity;
         }
 

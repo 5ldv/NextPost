@@ -20,6 +20,8 @@ namespace NextPost.Core.Models
         public bool IsBanned { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public List<Post> Posts { get; set; } = new();
+        public List<Comment> Comments { get; set; } = new();
 
     }
 }

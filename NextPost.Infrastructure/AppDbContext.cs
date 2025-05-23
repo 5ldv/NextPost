@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using NextPost.Core.Models;
 using NextPost.Core.Models.Identity;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,9 @@ namespace NextPost.Infrastructure
 {
     public class AppDbContext : IdentityDbContext<AppUser, AppRole, int>
     {
+        public DbSet<Author> Authors { get; set; }
+        public DbSet<Post> Posts { get; set; }
+        public DbSet<Comment> Comments { get; set; }
         public AppDbContext(DbContextOptions options) : base(options)
         {
 

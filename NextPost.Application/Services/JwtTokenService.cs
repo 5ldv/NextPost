@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NextPost.Api.Configurations;
 using NextPost.Application.Dtos;
+using NextPost.Application.Exceptions;
 using NextPost.Application.Helpers;
 using NextPost.Application.Interfaces;
 using NextPost.Core.Models;
@@ -21,15 +23,19 @@ namespace NextPost.Application.Services
 {
     public class JwtTokenService(
         IOptions<JwtSettings> jwtSettings,
-        UserManager<AppUser> userManager) : IJwtTokenService
+        UserManager<AppUser> userManager,
+        ILogger<JwtTokenService> logger) : IJwtTokenService
     {
         private readonly JwtSettings _jwtSettings = jwtSettings.Value;
         private readonly UserManager<AppUser> _userManager = userManager;
+        private readonly ILogger<JwtTokenService> _logger = logger;
 
         public async Task<string> CreateAccessTokenAsync(AppUser user)
         {
+            _logger.LogInformation("Creating access token for user with ID: {UserId}", user?.Id);
+
             if(user is null)
-                throw new ArgumentNullException(nameof(user), "User cannot be null");
+                throw new NullUserException();
 
             var claims = await ClaimsHelper.GetClaimsListAsync(user, _userManager);
 
@@ -48,26 +54,29 @@ namespace NextPost.Application.Services
             var tokenHandler = new JwtSecurityTokenHandler();
             var securityToken = tokenHandler.CreateToken(tokenDescriptor);
 
+            _logger.LogInformation("Access token created for user with ID: {UserId}", user?.Id);
             return tokenHandler.WriteToken(securityToken);
         }
         public async Task<RefreshToken?> RefreshTokenAsync(string refreshToken)
         {
+            _logger.LogInformation("Attempting to refresh token: {RefreshToken}", refreshToken);
+
             if(string.IsNullOrEmpty(refreshToken))
-                throw new ArgumentException(nameof(refreshToken), "Refresh token cannot be null or empty");
+                throw new InvalidRefreshTokenException();
 
 
             var tokenOwner = _userManager.Users
             .SingleOrDefault(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken));
 
             if(tokenOwner is null)
-                throw new UnauthorizedAccessException("Invalid refresh token");
+                throw new InvalidRefreshTokenException(refreshToken);
 
 
             var matchedRefreshToken = tokenOwner.RefreshTokens.Single(rt => rt.Token == refreshToken);
 
             if(!matchedRefreshToken.IsActive)
-                throw new UnauthorizedAccessException("Invalid refresh token");
-
+                throw new UnactiveRefreshTokenException();
+            
 
             matchedRefreshToken.RevokedOn = DateTime.UtcNow;
 
@@ -80,7 +89,9 @@ namespace NextPost.Application.Services
             var result = await _userManager.UpdateAsync(tokenOwner);
 
             if(!result.Succeeded)
-                throw new ApplicationException("Failed to update user with new refresh token.");
+                throw new UpdateUserFailedException();
+
+            _logger.LogInformation("Refresh token successfully refreshed for user with ID: {UserId}", tokenOwner.Id);
 
             return newRefreshToken;
         }
@@ -94,27 +105,30 @@ namespace NextPost.Application.Services
         }
         public async Task<bool> RevokeRefreshTokenAsync(string refreshToken)
         {
+            _logger.LogInformation("Revoking refresh token: {RefreshToken}", refreshToken);
+
             if(string.IsNullOrEmpty(refreshToken))
-                throw new ArgumentException(nameof(refreshToken), "Refresh token cannot be null or empty");
+                throw new InvalidRefreshTokenException();
 
 
             var tokenOwner = _userManager.Users
                 .FirstOrDefault(u => u.RefreshTokens.Any(rt => rt.Token == refreshToken));
 
             if(tokenOwner is null)
-                throw new UnauthorizedAccessException("Invalid refresh token");
-
+                throw new InvalidRefreshTokenException(refreshToken);
 
             var matchedRefreshToken = tokenOwner.RefreshTokens.Single(rt => rt.Token == refreshToken);
 
             if(!matchedRefreshToken.IsActive)
-                throw new UnauthorizedAccessException("Invalid refresh token");
+                throw new InvalidRefreshTokenException(refreshToken);
 
             matchedRefreshToken.RevokedOn = DateTime.UtcNow;
             var result = await _userManager.UpdateAsync(tokenOwner);
 
             if(!result.Succeeded)
-                throw new ApplicationException("Failed to revoke refresh token.");
+                throw new UpdateUserFailedException();
+
+            _logger.LogInformation("Refresh token revoked for user with ID: {UserId}", tokenOwner.Id);
 
             return true;
         }

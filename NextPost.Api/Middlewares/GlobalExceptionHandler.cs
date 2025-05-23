@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using NextPost.Application.Dtos;
+using NextPost.Application.Exceptions;
 
 namespace NextPost.Api.Middlewares
 {
@@ -16,11 +17,20 @@ namespace NextPost.Api.Middlewares
 
             var (statusCode, title) = exception switch
             {
-                UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
                 ValidationException => (StatusCodes.Status400BadRequest, "Bad Request"),
-                ArgumentNullException => (StatusCodes.Status400BadRequest, "Bad Request"),
-                ArgumentException => (StatusCodes.Status400BadRequest, "Bad Request"),
-                KeyNotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
+                InvalidAuthorIdException => (StatusCodes.Status400BadRequest, "Bad Request"),
+                InvalidPostIdException => (StatusCodes.Status400BadRequest, "Bad Request"),
+                InvalidCommentIdException => (StatusCodes.Status400BadRequest, "Bad Request"),
+                InvalidRefreshTokenException => (StatusCodes.Status400BadRequest, "Bad Request"),
+                NullUserException => (StatusCodes.Status400BadRequest, "Bad Request"),
+
+                AuthorNotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
+                CommentNotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
+                PostNotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
+                UnactiveRefreshTokenException => (StatusCodes.Status404NotFound, "Not Found"),
+
+                InvalidCredentialsException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
+
                 _ => (StatusCodes.Status500InternalServerError, "Internal Server Error")
             };
 

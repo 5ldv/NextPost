@@ -13,7 +13,9 @@ namespace NextPost.Core.Interfaces
     {
         IGenericRepository<AppUser> Users { get; }
         IGenericRepository<AppRole> Roles { get; }
-        IAuthorRepository Authors { get; } 
+        IAuthorRepository Authors { get; }
+        IPostRepository Posts { get; }
+        ICommentRepository Comments { get; }
 
         Task<int> SaveChangesAsync();
     }
