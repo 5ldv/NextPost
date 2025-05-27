@@ -2,6 +2,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using NextPost.Application.Constants;
 using NextPost.Application.DTO_s;
 using NextPost.Application.Dtos;
 using NextPost.Application.Exceptions;
@@ -9,6 +10,7 @@ using NextPost.Application.Helpers;
 using NextPost.Application.Interfaces;
 using NextPost.Core.Interfaces;
 using NextPost.Core.Models;
+using NextPost.Infrastructure.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,7 +49,7 @@ namespace NextPost.Application.Services
             {
                 throw new PostNotFoundException(postId);
             }
-            
+
             var postDto = _mapper.Map<PostDto>(post);
 
             _logger.LogInformation("Post with id {PostId} found successfully", postId);
@@ -127,6 +129,15 @@ namespace NextPost.Application.Services
             await _unitOfWork.SaveChangesAsync();
             _logger.LogInformation("Post with id {postId} deleted successfully", postId);
 
+        }
+
+        public async Task<IEnumerable<PostDto>> GetLastPostedPosts(int pageNumber)
+        {
+            IEnumerable<Post> posts = await _unitOfWork.Posts
+                .FindAllAsync(p => !p.IsDeleted, false, pageNumber, PageConstants.PageSize, p => p.CreatedAt,
+                OrderBy.Descending, new[] { "Author", "Comments" });
+
+            return _mapper.Map<IEnumerable<PostDto>>(posts);
         }
     }
 }

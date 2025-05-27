@@ -29,7 +29,6 @@ namespace NextPost.Application.MappingProfiles
             CreateMap<Post, PostDto>();
             CreateMap<AddPostDto, Post>();
 
-
             CreateMap<Comment, PostCommentDto>();
             CreateMap<AddCommentDto, Comment>();
             CreateMap<UpdateCommentDto, Comment>();

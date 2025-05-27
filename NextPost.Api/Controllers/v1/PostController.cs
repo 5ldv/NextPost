@@ -17,6 +17,38 @@ namespace NextPost.Api.Controllers.v1
     {
         private readonly IPostService _postService = postService;
 
+        /// <summary>
+        /// Retrieves last posted posts (10 posts)
+        /// </summary>
+        /// <response code="200">Returns the posts details.</response>
+        /// <response code="400">Invalid request parameters.</response>
+        /// <response code="401">Unauthorized access.</response>
+        /// <response code="404">posts are not found.</response>
+        /// <response code="500">internal server error occurs.</response>
+        /// 
+        [HttpGet]
+        [Route("timeline")]
+        [ProducesResponseType(typeof(IEnumerable<PostDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetLastPostedPost(int pageNumber)
+        {
+            if(!ModelState.IsValid)
+                throw new BadHttpRequestException("Invalid request parameters.");
+
+            var posts = await _postService.GetLastPostedPosts(pageNumber);
+
+            if(posts is null)
+                return NotFound($"Posts are not found.");
+
+            return Ok(posts);
+        }
+
+
+
+
 
         /// <summary>
         /// Retrieves an post by post id.

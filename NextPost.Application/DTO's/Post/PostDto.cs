@@ -14,6 +14,6 @@ namespace NextPost.Application.DTO_s
         public required string Content { get; set; }
         public required PostAuthorDto Author { get; set; }
         public DateTime CreatedAt { get; set; }
-        public List<Comment> Comments { get; set; } = new();
+        public List<PostCommentDto> Comments { get; set; } = new();
     }
 }
